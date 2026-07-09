@@ -1,5 +1,6 @@
 let currentUser = null;
 let currentUsername = null;
+let recoveryMode = false;
 
 function mostrarErrorLogin(texto) {
     document.getElementById('loginErrorText').textContent = texto;
@@ -74,6 +75,42 @@ function cerrarRegistro() {
     document.getElementById('modalRegistro').classList.remove('active');
 }
 
+function mostrarResetPassword() {
+    document.getElementById('resetError').style.display = 'none';
+    document.getElementById('resetSuccess').style.display = 'none';
+    document.getElementById('formResetPassword').reset();
+    document.getElementById('modalResetPassword').classList.add('active');
+}
+
+function cerrarResetPassword() {
+    document.getElementById('modalResetPassword').classList.remove('active');
+}
+
+async function enviarLinkReset(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://davenialgo-loop.github.io/venialgo_finanzas/'
+    });
+    return error;
+}
+
+function mostrarNewPasswordSection() {
+    recoveryMode = true;
+    document.getElementById('setNewPasswordSection').style.display = 'block';
+    document.getElementById('loginContainer').classList.add('hidden');
+    document.getElementById('appContainer').classList.remove('active');
+    document.getElementById('newPassError').style.display = 'none';
+}
+
+function ocultarNewPasswordSection() {
+    recoveryMode = false;
+    document.getElementById('setNewPasswordSection').style.display = 'none';
+}
+
+async function guardarNuevaPassword(password) {
+    const { error } = await supabase.auth.updateUser({ password });
+    return error;
+}
+
 async function cargarUsername(userId) {
     const { data, error } = await supabase
         .from('profiles')
@@ -98,8 +135,21 @@ function domReady() {
     });
 }
 
+function detectarRecovery() {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.replace('#', ''));
+    if (params.get('type') === 'recovery') {
+        mostrarNewPasswordSection();
+    }
+}
+
 supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+        mostrarNewPasswordSection();
+        return;
+    }
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+        if (recoveryMode) return;
         currentUser = session.user;
         await domReady();
         document.getElementById('loginContainer').classList.add('hidden');
@@ -110,5 +160,80 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     } else if (event === 'SIGNED_OUT') {
         currentUser = null;
         currentUsername = null;
+    }
+});
+
+detectarRecovery();
+
+document.getElementById('formResetPassword')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('resetEmail').value.trim();
+    const btn = document.getElementById('btnResetPassword');
+    const errorEl = document.getElementById('resetError');
+    const successEl = document.getElementById('resetSuccess');
+
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+
+    if (!email) {
+        document.getElementById('resetErrorText').textContent = 'Ingresá tu correo electrónico.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+    const error = await enviarLinkReset(email);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar link';
+
+    if (error) {
+        document.getElementById('resetErrorText').textContent = error.message;
+        errorEl.style.display = 'block';
+    } else {
+        document.getElementById('formResetPassword').reset();
+        successEl.style.display = 'block';
+    }
+});
+
+document.getElementById('formNewPassword')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const password = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('newPasswordConfirm').value;
+    const btn = document.getElementById('btnNewPassword');
+    const errorEl = document.getElementById('newPassError');
+
+    errorEl.style.display = 'none';
+
+    if (!password || password.length < 6) {
+        document.getElementById('newPassErrorText').textContent = 'La contraseña debe tener al menos 6 caracteres.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    if (password !== confirm) {
+        document.getElementById('newPassErrorText').textContent = 'Las contraseñas no coinciden.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    const error = await guardarNuevaPassword(password);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i> Guardar nueva contraseña';
+
+    if (error) {
+        document.getElementById('newPassErrorText').textContent = error.message;
+        errorEl.style.display = 'block';
+    } else {
+        ocultarNewPasswordSection();
+        document.getElementById('loginContainer').classList.remove('hidden');
+        document.getElementById('appContainer').classList.remove('active');
+        document.getElementById('loginForm').reset();
+        ocultarErrorLogin();
+        alert('Contraseña actualizada correctamente. Ahora podés iniciar sesión con tu nueva contraseña.');
     }
 });

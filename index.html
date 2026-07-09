@@ -79,6 +79,73 @@
         <div class="registro-link">
             ¿No tienes cuenta? <a onclick="mostrarRegistro()">Regístrate aquí</a>
         </div>
+        <div class="registro-link" style="margin-top:0.3rem;">
+            <a onclick="mostrarResetPassword()" style="font-size:0.85rem;">¿Olvidaste tu contraseña?</a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- RESET PASSWORD (modal) -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalResetPassword">
+    <div class="modal">
+        <h2><i class="fas fa-key"></i> Recuperar Contraseña</h2>
+        <p style="margin-bottom:1rem;color:var(--text-muted);font-size:0.9rem;">
+            Ingresá tu correo y te enviaremos un link para restablecer tu contraseña.
+        </p>
+        <div id="resetError" class="error-msg" style="display:none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="resetErrorText">Error</span>
+        </div>
+        <div id="resetSuccess" class="error-msg" style="display:none;background:#e8f5e9;color:#2e7d32;">
+            <i class="fas fa-check-circle"></i>
+            <span>Revisá tu correo. Si la cuenta existe, recibirás un enlace de recuperación.</span>
+        </div>
+        <form id="formResetPassword">
+            <div class="field">
+                <label for="resetEmail"><i class="fas fa-envelope"></i> Correo electrónico</label>
+                <input type="email" id="resetEmail" placeholder="tu@correo.com" required autocomplete="email" />
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancelar-modal" onclick="cerrarResetPassword()">Cancelar</button>
+                <button type="submit" class="btn-guardar-modal" id="btnResetPassword">
+                    <i class="fas fa-paper-plane"></i> Enviar link
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ESTABLECER NUEVA CONTRASEÑA (después de recovery link) -->
+<!-- ============================================================ -->
+<div id="setNewPasswordSection" style="display:none;">
+    <div style="display:flex;justify-content:center;align-items:center;min-height:100vh;width:100%;position:fixed;top:0;left:0;background:var(--bg-primary);z-index:9999;padding:1rem;">
+        <div class="login-box">
+            <div class="logo">
+                <i class="fas fa-lock"></i>
+                <h2>Nueva Contraseña</h2>
+                <p>Ingresá tu nueva contraseña</p>
+            </div>
+            <div id="newPassError" class="error-msg" style="display:none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="newPassErrorText">Error</span>
+            </div>
+            <form id="formNewPassword">
+                <div class="field">
+                    <label for="newPassword"><i class="fas fa-lock"></i> Nueva contraseña</label>
+                    <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password" />
+                </div>
+                <div class="field">
+                    <label for="newPasswordConfirm"><i class="fas fa-check-circle"></i> Confirmar contraseña</label>
+                    <input type="password" id="newPasswordConfirm" placeholder="Repetí la contraseña" required autocomplete="new-password" />
+                </div>
+                <button type="submit" class="btn-login" id="btnNewPassword">
+                    <i class="fas fa-save"></i> Guardar nueva contraseña
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
