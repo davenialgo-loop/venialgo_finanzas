@@ -184,7 +184,12 @@ document.getElementById('formResetPassword')?.addEventListener('submit', async f
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-    const error = await enviarLinkReset(email);
+    let error;
+    try {
+        error = await enviarLinkReset(email);
+    } catch (err) {
+        error = err;
+    }
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar link';
 
@@ -221,7 +226,12 @@ document.getElementById('formNewPassword')?.addEventListener('submit', async fun
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
 
-    const error = await guardarNuevaPassword(password);
+    let error;
+    try {
+        error = await guardarNuevaPassword(password);
+    } catch (err) {
+        error = err;
+    }
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-save"></i> Guardar nueva contraseña';
 
