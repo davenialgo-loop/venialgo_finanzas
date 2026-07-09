@@ -1,4 +1,4 @@
-const CACHE_NAME = 'venialgo-finanzas-v3';
+const CACHE_NAME = 'venialgo-finanzas-v4';
 
 const urlsToCache = [
     '.',
