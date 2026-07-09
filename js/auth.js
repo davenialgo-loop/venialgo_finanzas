@@ -95,6 +95,7 @@ async function enviarLinkReset(email) {
 
 function mostrarNewPasswordSection() {
     recoveryMode = true;
+    localStorage.setItem('recovery_mode', 'true');
     document.getElementById('setNewPasswordSection').style.display = 'block';
     document.getElementById('loginContainer').classList.add('hidden');
     document.getElementById('appContainer').classList.remove('active');
@@ -103,6 +104,7 @@ function mostrarNewPasswordSection() {
 
 function ocultarNewPasswordSection() {
     recoveryMode = false;
+    localStorage.removeItem('recovery_mode');
     document.getElementById('setNewPasswordSection').style.display = 'none';
 }
 
@@ -150,6 +152,10 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     }
     if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
         if (recoveryMode) return;
+        if (localStorage.getItem('recovery_mode') === 'true') {
+            mostrarNewPasswordSection();
+            return;
+        }
         currentUser = session.user;
         await domReady();
         document.getElementById('loginContainer').classList.add('hidden');
@@ -240,6 +246,7 @@ document.getElementById('formNewPassword')?.addEventListener('submit', async fun
         errorEl.style.display = 'block';
     } else {
         ocultarNewPasswordSection();
+        await supabase.auth.signOut();
         document.getElementById('loginContainer').classList.remove('hidden');
         document.getElementById('appContainer').classList.remove('active');
         document.getElementById('loginForm').reset();
