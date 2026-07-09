@@ -54,6 +54,7 @@ async function registrarUsuario(username, email, password) {
 }
 
 async function cerrarSesion() {
+    if (typeof cerrarBottomSheet === 'function') cerrarBottomSheet();
     await supabase.auth.signOut();
     currentUser = null;
     currentUsername = null;
