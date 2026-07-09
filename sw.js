@@ -1,4 +1,4 @@
-const CACHE_NAME = 'venialgo-gastos-v2';
+const CACHE_NAME = 'venialgo-finanzas-v3';
 
 const urlsToCache = [
     '.',
@@ -11,6 +11,8 @@ const urlsToCache = [
     'js/auth.js',
     'js/app.js',
     'js/scan.js',
+    'js/ingresos.js',
+    'js/deudas.js',
     'icons/icon-192.svg',
     'icons/icon-512.svg',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',

@@ -137,8 +137,63 @@
             </div>
         </div>
 
-        <!-- FORMULARIO -->
-        <form class="form-gasto" id="formGasto">
+        <div class="sections-wrapper">
+
+        <!-- INICIO -->
+        <div id="section-inicio" class="section">
+            <div class="dashboard-inicio">
+                <div class="resumen-card balance-card" id="balanceCard">
+                    <div>
+                        <div class="label">Balance Total</div>
+                        <div class="value" id="balanceTotal">₲ 0</div>
+                    </div>
+                    <i class="fas fa-scale-balanced"></i>
+                </div>
+                <div class="resumen-card">
+                    <div>
+                        <div class="label">Ingresos del Mes</div>
+                        <div class="value" id="balanceIngresosMes">₲ 0</div>
+                    </div>
+                    <i class="fas fa-arrow-down" style="color:var(--success-color)"></i>
+                </div>
+                <div class="resumen-card">
+                    <div>
+                        <div class="label">Gastos del Mes</div>
+                        <div class="value" id="balanceGastosMes">₲ 0</div>
+                    </div>
+                    <i class="fas fa-arrow-up" style="color:var(--danger-color)"></i>
+                </div>
+                <div class="resumen-card">
+                    <div>
+                        <div class="label">Deudas Pendientes</div>
+                        <div class="value" id="balanceDeudas">₲ 0</div>
+                    </div>
+                    <i class="fas fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+            <div class="inicio-actions">
+                <button class="btn-agregar" onclick="mostrarSeccion('ingresos')" style="flex:1;background:var(--success-color)">
+                    <i class="fas fa-plus"></i> Ingreso
+                </button>
+                <button class="btn-agregar" onclick="mostrarSeccion('gastos')" style="flex:1">
+                    <i class="fas fa-plus"></i> Gasto
+                </button>
+                <button class="btn-scan-capture" onclick="mostrarSeccion('deudas')" style="flex:1">
+                    <i class="fas fa-hand-holding-dollar"></i> Deuda
+                </button>
+            </div>
+            <div class="ultimos-movimientos">
+                <h3><i class="fas fa-clock-rotate"></i> Últimos Movimientos</h3>
+                <div id="listaUltimosMovimientos">
+                    <div class="sin-gastos">Cargando...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GASTOS -->
+        <div id="section-gastos" class="section">
+            <!-- FORMULARIO -->
+            <form class="form-gasto" id="formGasto">
             <div class="field">
                 <label for="concepto"><i class="fas fa-tag"></i> Concepto</label>
                 <input type="text" id="concepto" placeholder="Ej. Supermercado" required />
@@ -229,6 +284,116 @@
                 <tbody id="tablaGastos"></tbody>
             </table>
         </div>
+        </div><!-- /section-gastos -->
+
+        <!-- CATEGORÍAS -->
+        <div id="section-categorias" class="section">
+            <div class="section-header-actions">
+                <button class="btn-agregar" onclick="abrirModalCategorias()">
+                    <i class="fas fa-plus"></i> Nueva Categoría
+                </button>
+            </div>
+            <div class="categorias-listas">
+                <div class="categorias-grupo">
+                    <h3><i class="fas fa-arrow-down"></i> Gastos</h3>
+                    <div id="categoriasGastos" class="categorias-grid"></div>
+                </div>
+                <div class="categorias-grupo">
+                    <h3><i class="fas fa-arrow-up"></i> Ingresos</h3>
+                    <div id="categoriasIngresos" class="categorias-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INGRESOS -->
+        <div id="section-ingresos" class="section">
+            <form class="form-gasto" id="formIngreso">
+                <div class="field">
+                    <label for="conceptoIngreso"><i class="fas fa-tag"></i> Concepto</label>
+                    <input type="text" id="conceptoIngreso" placeholder="Ej. Salario" required />
+                </div>
+                <div class="field">
+                    <label for="categoriaIngreso"><i class="fas fa-list"></i> Categoría</label>
+                    <select id="categoriaIngreso"></select>
+                </div>
+                <div class="field">
+                    <label for="montoIngreso"><i class="fas fa-money-bill-wave"></i> Monto (₲)</label>
+                    <input type="number" id="montoIngreso" placeholder="0" step="100" min="100" required />
+                </div>
+                <button type="submit" class="btn-agregar" style="background:var(--success-color)">
+                    <i class="fas fa-plus-circle"></i> Agregar
+                </button>
+            </form>
+
+            <div class="resumen-wrapper">
+                <div class="resumen-card">
+                    <div class="label">Total Ingresos</div>
+                    <div class="value" id="totalIngresos">₲ 0</div>
+                </div>
+                <div class="resumen-card">
+                    <div class="label">Este Mes</div>
+                    <div class="value" id="totalIngresosMes">₲ 0</div>
+                </div>
+                <div class="resumen-card">
+                    <div class="label">Promedio</div>
+                    <div class="value" id="promedioIngresos">₲ 0</div>
+                </div>
+            </div>
+
+            <div class="graficos-wrapper">
+                <div class="chart-card"><canvas id="chartIngresos"></canvas></div>
+                <div class="chart-card"><canvas id="chartIngresosMensual"></canvas></div>
+            </div>
+
+            <div class="filtros">
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="buscarIngreso" placeholder="Buscar ingreso..." class="input-filtro" />
+                </div>
+            </div>
+
+            <div class="tabla-wrapper">
+                <table class="tabla-gastos">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Descripción</th>
+                            <th>Categoría</th>
+                            <th style="text-align:right;">Monto</th>
+                            <th style="text-align:center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaIngresos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DEUDAS -->
+        <div id="section-deudas" class="section">
+            <div class="section-header-actions">
+                <button class="btn-agregar" onclick="abrirModalDeuda()">
+                    <i class="fas fa-plus"></i> Nueva Deuda
+                </button>
+            </div>
+
+            <div class="resumen-wrapper">
+                <div class="resumen-card"><div class="label">A Pagar</div><div class="value danger" id="totalAPagar">₲ 0</div></div>
+                <div class="resumen-card"><div class="label">A Cobrar</div><div class="value success" id="totalACobrar">₲ 0</div></div>
+                <div class="resumen-card"><div class="label">Neto</div><div class="value" id="totalDeudaNeta">₲ 0</div></div>
+            </div>
+
+            <div class="filtros">
+                <select id="filtroDeudas" class="input-filtro">
+                    <option value="todas">Todas</option>
+                    <option value="activas">Activas</option>
+                    <option value="pagadas">Pagadas</option>
+                </select>
+            </div>
+
+            <div id="listaDeudas"></div>
+        </div>
+
+        </div><!-- /sections-wrapper -->
 
         <!-- FOOTER -->
         <footer class="app-footer">
@@ -237,25 +402,49 @@
     </div>
 </div>
 
-<!-- Barra inferior de herramientas -->
-<nav class="bottom-nav">
-    <button class="nav-btn nav-scan" onclick="abrirScanner()" title="Escanear factura">
-        <i class="fas fa-camera"></i>
-        <span>Escanear</span>
+<!-- Barra inferior de navegación -->
+<nav class="bottom-nav" id="bottomNav">
+    <button class="nav-btn active" data-section="inicio" onclick="mostrarSeccion('inicio')" title="Inicio">
+        <i class="fas fa-house"></i>
+        <span>Inicio</span>
     </button>
-    <button class="nav-btn nav-categorias" onclick="abrirModalCategorias()" title="Gestionar categorías">
+    <button class="nav-btn" data-section="gastos" onclick="mostrarSeccion('gastos')" title="Gastos">
+        <i class="fas fa-arrow-up"></i>
+        <span>Gastos</span>
+    </button>
+    <button class="nav-btn" data-section="categorias" onclick="mostrarSeccion('categorias')" title="Categorías">
         <i class="fas fa-tags"></i>
         <span>Categorías</span>
     </button>
-    <button class="nav-btn nav-exportar" onclick="exportarExcel()" title="Exportar a Excel">
-        <i class="fas fa-file-excel"></i>
-        <span>Exportar</span>
+    <button class="nav-btn" data-section="escaneo" onclick="abrirScanner()" title="Escanear">
+        <i class="fas fa-camera"></i>
+        <span>Escanear</span>
     </button>
-    <button class="nav-btn nav-salir" onclick="cerrarSesion()" title="Cerrar sesión">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Salir</span>
+    <button class="nav-btn" data-section="mas" onclick="abrirBottomSheet()" title="Más">
+        <i class="fas fa-ellipsis"></i>
+        <span>Más</span>
     </button>
 </nav>
+
+<!-- Bottom Sheet Más -->
+<div class="bottom-sheet-overlay" id="bottomSheetOverlay" onclick="cerrarBottomSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+    <div class="bottom-sheet-handle"></div>
+    <div class="bottom-sheet-content">
+        <button class="bottom-sheet-btn" onclick="mostrarSeccion('ingresos');cerrarBottomSheet()">
+            <i class="fas fa-arrow-down" style="color:var(--success-color)"></i> Ingresos
+        </button>
+        <button class="bottom-sheet-btn" onclick="mostrarSeccion('deudas');cerrarBottomSheet()">
+            <i class="fas fa-hand-holding-dollar"></i> Deudas
+        </button>
+        <button class="bottom-sheet-btn" onclick="exportarExcel();cerrarBottomSheet()">
+            <i class="fas fa-file-excel" style="color:#1d6f42"></i> Exportar
+        </button>
+        <button class="bottom-sheet-btn" onclick="cerrarSesion()">
+            <i class="fas fa-right-from-bracket" style="color:var(--danger-color)"></i> Cerrar Sesión
+        </button>
+    </div>
+</div>
 
 <!-- ============================================================ -->
 <!-- MODAL DE EDICIÓN -->
@@ -311,6 +500,81 @@
         <div class="modal-actions">
             <button type="button" class="btn-cancelar-modal" onclick="cerrarModalCategorias()">Cerrar</button>
         </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL DE EDICIÓN DE INGRESOS -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalEditarIngreso">
+    <div class="modal">
+        <h2><i class="fas fa-edit"></i> Editar Ingreso</h2>
+        <form id="formEditarIngreso">
+            <input type="hidden" id="editIngresoId" />
+            <div class="field">
+                <label for="editConceptoIngreso">Concepto</label>
+                <input type="text" id="editConceptoIngreso" required />
+            </div>
+            <div class="field">
+                <label for="editCategoriaIngreso">Categoría</label>
+                <select id="editCategoriaIngreso"></select>
+            </div>
+            <div class="field">
+                <label for="editMontoIngreso">Monto (₲)</label>
+                <input type="number" id="editMontoIngreso" step="100" min="100" required />
+            </div>
+            <div class="field">
+                <label for="editFechaIngreso">Fecha</label>
+                <input type="date" id="editFechaIngreso" required />
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancelar-modal" onclick="cerrarModalEditarIngreso()">Cancelar</button>
+                <button type="submit" class="btn-guardar-modal">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL DE DEUDA (crear/editar) -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="modalDeuda">
+    <div class="modal">
+        <h2><i class="fas fa-hand-holding-dollar"></i> <span id="modalDeudaTitulo">Nueva Deuda</span></h2>
+        <form id="formDeuda">
+            <input type="hidden" id="deudaId" />
+            <div class="field">
+                <label for="deudaNombre">Nombre / Concepto</label>
+                <input type="text" id="deudaNombre" placeholder="Ej. Préstamo banco" required />
+            </div>
+            <div class="field">
+                <label for="deudaTipo">Tipo</label>
+                <select id="deudaTipo">
+                    <option value="a_pagar">A Pagar (Yo debo)</option>
+                    <option value="a_cobrar">A Cobrar (Me deben)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="deudaMontoTotal">Monto Total (₲)</label>
+                <input type="number" id="deudaMontoTotal" placeholder="0" step="100" min="1" required />
+            </div>
+            <div class="field">
+                <label for="deudaMontoPagado">Monto Pagado (₲)</label>
+                <input type="number" id="deudaMontoPagado" placeholder="0" step="100" min="0" value="0" />
+            </div>
+            <div class="field">
+                <label for="deudaFechaVenc">Fecha de Vencimiento</label>
+                <input type="date" id="deudaFechaVenc" />
+            </div>
+            <div class="field">
+                <label for="deudaNotas">Notas</label>
+                <textarea id="deudaNotas" placeholder="Notas opcionales..." rows="2"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancelar-modal" onclick="cerrarModalDeuda()">Cancelar</button>
+                <button type="submit" class="btn-guardar-modal">Guardar</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -393,6 +657,8 @@
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 <script src="js/scan.js"></script>
+<script src="js/ingresos.js"></script>
+<script src="js/deudas.js"></script>
 
 <!-- Service Worker -->
 <script>

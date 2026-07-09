@@ -8,6 +8,7 @@ let ordenDireccion = 'desc';
 async function iniciarApp() {
     await cargarDatosIniciales();
     cargarModoOscuro();
+    mostrarSeccion('inicio');
     renderizarTodo();
 }
 
@@ -29,38 +30,105 @@ async function cargarDatosIniciales() {
 
     const { data: catsData, error: catsError } = await supabase
         .from('categories')
-        .select('name')
+        .select('name, tipo')
         .eq('user_id', currentUser.id)
         .order('name');
 
     if (catsError) {
         console.error('Error loading categories:', catsError);
-        categorias = ['Alimentos', 'Transporte', 'Ocio', 'Salud', 'Hogar', 'Otros'];
+        categorias = [
+            { name: 'Alimentos', tipo: 'expense' },
+            { name: 'Transporte', tipo: 'expense' },
+            { name: 'Ocio', tipo: 'expense' },
+            { name: 'Salud', tipo: 'expense' },
+            { name: 'Hogar', tipo: 'expense' },
+            { name: 'Otros', tipo: 'expense' }
+        ];
     } else if (catsData && catsData.length > 0) {
-        categorias = catsData.map(c => c.name);
+        categorias = catsData;
     } else {
-        categorias = ['Alimentos', 'Transporte', 'Ocio', 'Salud', 'Hogar', 'Otros'];
+        categorias = [
+            { name: 'Alimentos', tipo: 'expense' },
+            { name: 'Transporte', tipo: 'expense' },
+            { name: 'Ocio', tipo: 'expense' },
+            { name: 'Salud', tipo: 'expense' },
+            { name: 'Hogar', tipo: 'expense' },
+            { name: 'Otros', tipo: 'expense' }
+        ];
         for (const cat of categorias) {
             await supabase.from('categories').insert({
                 user_id: currentUser.id,
-                name: cat
+                name: cat.name,
+                tipo: cat.tipo
             });
         }
     }
+
+    if (typeof cargarIngresos === 'function') {
+        await cargarIngresos();
+    }
+    if (typeof cargarDeudas === 'function') {
+        await cargarDeudas();
+    }
+}
+
+function mostrarSeccion(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+    const sectionMap = {
+        inicio: '#section-inicio',
+        gastos: '#section-gastos',
+        categorias: '#section-categorias',
+        ingresos: '#section-ingresos',
+        deudas: '#section-deudas'
+    };
+
+    const section = document.querySelector(sectionMap[id]);
+    if (section) section.classList.add('active');
+
+    const navBtn = document.querySelector(`.nav-btn[data-section="${id}"]`);
+    if (navBtn) navBtn.classList.add('active');
+
+    if (id === 'gastos') {
+        renderizarTodo();
+    } else if (id === 'inicio') {
+        actualizarDashboard();
+    } else if (id === 'categorias') {
+        renderizarCategoriasPage();
+    } else if (id === 'ingresos' && typeof renderizarIngresos === 'function') {
+        renderizarIngresos();
+    } else if (id === 'deudas' && typeof renderizarDeudas === 'function') {
+        renderizarDeudas();
+    }
+
+    cerrarBottomSheet();
+}
+
+function abrirBottomSheet() {
+    document.getElementById('bottomSheetOverlay').classList.add('active');
+    document.getElementById('bottomSheet').classList.add('active');
+}
+
+function cerrarBottomSheet() {
+    document.getElementById('bottomSheetOverlay')?.classList.remove('active');
+    document.getElementById('bottomSheet')?.classList.remove('active');
 }
 
 function renderizarTodo() {
-    cargarSelectCategorias();
+    cargarSelectCategoriasExpense();
     renderizarTabla();
     actualizarResumen();
     setTimeout(() => {
         actualizarGrafico();
         actualizarGraficoMensual();
     }, 50);
+    actualizarDashboard();
 }
 
-function cargarSelectCategorias() {
+function cargarSelectCategoriasExpense() {
     const selects = ['categoria', 'filtroCategoria', 'editCategoria', 'scanCategoria'];
+    const expCats = categorias.filter(c => c.tipo === 'expense' || !c.tipo);
     selects.forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
@@ -74,19 +142,80 @@ function cargarSelectCategorias() {
             select.appendChild(opt);
         }
 
-        categorias.forEach(cat => {
+        expCats.forEach(cat => {
             const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat;
+            opt.value = cat.name;
+            opt.textContent = cat.name;
             select.appendChild(opt);
         });
 
-        if (valorActual && categorias.includes(valorActual)) {
+        const catNames = expCats.map(c => c.name);
+        if (valorActual && catNames.includes(valorActual)) {
             select.value = valorActual;
-        } else if (id !== 'filtroCategoria' && categorias.length > 0) {
-            select.value = categorias[0];
+        } else if (id !== 'filtroCategoria' && catNames.length > 0) {
+            select.value = catNames[0];
         }
     });
+}
+
+function cargarSelectCategoriasIngreso() {
+    const selects = ['categoriaIngreso', 'editCategoriaIngreso'];
+    const incCats = categorias.filter(c => c.tipo === 'income');
+    selects.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        const valorActual = select.value;
+        select.innerHTML = '';
+        incCats.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.name;
+            opt.textContent = cat.name;
+            select.appendChild(opt);
+        });
+        const catNames = incCats.map(c => c.name);
+        if (valorActual && catNames.includes(valorActual)) {
+            select.value = valorActual;
+        } else if (catNames.length > 0) {
+            select.value = catNames[0];
+        }
+    });
+}
+
+function renderizarCategoriasPage() {
+    const expCats = categorias.filter(c => c.tipo === 'expense' || !c.tipo);
+    const incCats = categorias.filter(c => c.tipo === 'income');
+    const coloresCat = ['#FFD54F','#64B5F6','#CE93D8','#EF9A9A','#A5D6A7','#B0BEC5','#FF8A65','#81D4FA','#C5E1A5'];
+
+    const renderGrupo = (cats, containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const categoriasUsadas = new Set(gastos.map(g => g.categoria));
+        container.innerHTML = cats.map((cat, index) => `
+            <div class="categoria-chip">
+                <span style="background:${coloresCat[index % coloresCat.length]}30;color:${coloresCat[index % coloresCat.length]};padding:0.1rem 0.4rem;border-radius:8px;font-size:0.7rem">${escapeHTML(cat.name)}</span>
+                ${categoriasUsadas.has(cat.name) ? '<i class="fas fa-check-circle" style="color:var(--success-color);font-size:0.6rem"></i>' : ''}
+                <button class="del" onclick="eliminarCategoriaDesdePagina('${escapeHTML(cat.name)}')" title="Eliminar"><i class="fas fa-times"></i></button>
+            </div>
+        `).join('');
+    };
+
+    renderGrupo(expCats, 'categoriasGastos');
+    renderGrupo(incCats, 'categoriasIngresos');
+}
+
+async function eliminarCategoriaDesdePagina(nombre) {
+    const cat = categorias.find(c => c.name === nombre);
+    if (!cat) return;
+    const enUso = gastos.some(g => g.categoria === nombre);
+    if (enUso) {
+        alert('No se puede eliminar una categoría que está en uso.');
+        return;
+    }
+    if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
+    const { error } = await supabase.from('categories').delete().eq('user_id', currentUser.id).eq('name', nombre);
+    if (error) { alert('Error: ' + error.message); return; }
+    categorias = categorias.filter(c => c.name !== nombre);
+    renderizarCategoriasPage();
 }
 
 function renderizarTabla() {
@@ -193,6 +322,78 @@ function actualizarResumen() {
         }
     }
     document.getElementById('categoriaMayor').textContent = `${mayor} (${formatearMonto(maxMonto)})`;
+}
+
+function actualizarDashboard() {
+    const gastosMes = gastos.filter(g => {
+        const d = new Date(g.fecha + 'T00:00:00');
+        const ahora = new Date();
+        return d.getMonth() === ahora.getMonth() && d.getFullYear() === ahora.getFullYear();
+    });
+    const totalGastosMes = gastosMes.reduce((a, g) => a + Number(g.monto), 0);
+
+    document.getElementById('balanceGastosMes').textContent = formatearMonto(totalGastosMes);
+
+    if (typeof ingresos !== 'undefined' && Array.isArray(ingresos)) {
+        const ingresosMes = ingresos.filter(g => {
+            const d = new Date(g.fecha + 'T00:00:00');
+            const ahora = new Date();
+            return d.getMonth() === ahora.getMonth() && d.getFullYear() === ahora.getFullYear();
+        });
+        const totalIngresosMes = ingresosMes.reduce((a, g) => a + Number(g.monto), 0);
+        document.getElementById('balanceIngresosMes').textContent = formatearMonto(totalIngresosMes);
+        document.getElementById('balanceTotal').textContent = formatearMonto(totalIngresosMes - totalGastosMes);
+    }
+
+    if (typeof deudas !== 'undefined' && Array.isArray(deudas)) {
+        const deudaPendiente = deudas.filter(d => d.estado === 'activa').reduce((a, d) => {
+            return a + (Number(d.monto_total) - Number(d.monto_pagado));
+        }, 0);
+        document.getElementById('balanceDeudas').textContent = formatearMonto(deudaPendiente);
+    }
+
+    renderizarUltimosMovimientos();
+}
+
+function renderizarUltimosMovimientos() {
+    const container = document.getElementById('listaUltimosMovimientos');
+    if (!container) return;
+
+    const items = [];
+
+    gastos.forEach(g => {
+        items.push({ ...g, _tipo: 'gasto', _icono: 'fa-cart-shopping' });
+    });
+
+    if (typeof ingresos !== 'undefined' && Array.isArray(ingresos)) {
+        ingresos.forEach(g => {
+            items.push({ ...g, _tipo: 'ingreso', _icono: 'fa-circle-dollar' });
+        });
+    }
+
+    items.sort((a, b) => new Date(b.fecha + 'T00:00:00') - new Date(a.fecha + 'T00:00:00'));
+
+    const ultimos = items.slice(0, 10);
+
+    if (ultimos.length === 0) {
+        container.innerHTML = '<div class="sin-gastos">No hay movimientos aún</div>';
+        return;
+    }
+
+    container.innerHTML = ultimos.map(item => `
+        <div class="movimiento-item">
+            <div class="movimiento-icon ${item._tipo}">
+                <i class="fas ${item._icono}"></i>
+            </div>
+            <div class="movimiento-info">
+                <div class="movimiento-concepto">${escapeHTML(item.concepto || item.nombre || '')}</div>
+                <div class="movimiento-fecha">${formatearFecha(item.fecha)}</div>
+            </div>
+            <div class="movimiento-monto ${item._tipo}">
+                ${item._tipo === 'ingreso' ? '+' : '-'} ${formatearMonto(item.monto || item.monto_total || 0)}
+            </div>
+        </div>
+    `).join('');
 }
 
 function actualizarGrafico() {
@@ -393,8 +594,9 @@ async function agregarGasto(e) {
 
     renderizarTodo();
     document.getElementById('formGasto').reset();
-    if (categorias.length > 0) {
-        document.getElementById('categoria').value = categorias[0];
+    const expCats = categorias.filter(c => c.tipo === 'expense' || !c.tipo);
+    if (expCats.length > 0) {
+        document.getElementById('categoria').value = expCats[0].name;
     }
     document.getElementById('concepto').focus();
 }
@@ -416,7 +618,7 @@ function abrirModalEditar(id) {
     const gasto = gastos.find(g => g.id === id);
     if (!gasto) return;
 
-    cargarSelectCategorias();
+    cargarSelectCategoriasExpense();
     document.getElementById('editId').value = id;
     document.getElementById('editConcepto').value = gasto.concepto;
     document.getElementById('editCategoria').value = gasto.categoria;
@@ -492,16 +694,16 @@ function renderizarListaCategorias() {
         <div class="item-categoria">
             <span class="nombre">
                 <span class="categoria-preview" style="background:${coloresCat[index % coloresCat.length]}30;color:${coloresCat[index % coloresCat.length]}">
-                    ${escapeHTML(cat)}
+                    ${escapeHTML(cat.name)}
                 </span>
-                ${categoriasUsadas.has(cat) ? ' <i class="fas fa-check-circle" style="color:var(--success-color);font-size:0.65rem;" title="Categoría en uso"></i>' : ''}
+                ${categoriasUsadas.has(cat.name) ? ' <i class="fas fa-check-circle" style="color:var(--success-color);font-size:0.65rem;" title="Categoría en uso"></i>' : ''}
             </span>
             <div class="acciones">
                 <button class="btn-edit-cat" onclick="editarCategoria(${index})" title="Editar nombre">
                     <i class="fas fa-pen"></i>
                 </button>
                 <button class="btn-del-cat" onclick="eliminarCategoria(${index})" title="Eliminar categoría"
-                    ${categoriasUsadas.has(cat) ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+                    ${categoriasUsadas.has(cat.name) ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -518,14 +720,15 @@ async function agregarCategoria() {
         return;
     }
 
-    if (categorias.includes(nombre)) {
+    if (categorias.some(c => c.name === nombre)) {
         alert('Esta categoría ya existe.');
         return;
     }
 
     const { error } = await supabase.from('categories').insert({
         user_id: currentUser.id,
-        name: nombre
+        name: nombre,
+        tipo: 'expense'
     });
 
     if (error) {
@@ -533,14 +736,14 @@ async function agregarCategoria() {
         return;
     }
 
-    categorias.push(nombre);
+    categorias.push({ name: nombre, tipo: 'expense' });
     input.value = '';
     renderizarTodo();
     renderizarListaCategorias();
 }
 
 async function editarCategoria(index) {
-    const nombreActual = categorias[index];
+    const nombreActual = categorias[index].name;
     if (!nombreActual) return;
     const nuevoNombre = prompt('Editar nombre de categoría:', nombreActual);
 
@@ -552,7 +755,7 @@ async function editarCategoria(index) {
         return;
     }
 
-    if (categorias.includes(nombreTrim) && nombreTrim !== nombreActual) {
+    if (categorias.some(c => c.name === nombreTrim) && nombreTrim !== nombreActual) {
         alert('Ya existe una categoría con ese nombre.');
         return;
     }
@@ -578,7 +781,7 @@ async function editarCategoria(index) {
         console.error('Error updating expenses category:', expError);
     }
 
-    categorias[index] = nombreTrim;
+    categorias[index].name = nombreTrim;
 
     gastos.forEach(g => {
         if (g.categoria === nombreActual) g.categoria = nombreTrim;
@@ -589,7 +792,7 @@ async function editarCategoria(index) {
 }
 
 async function eliminarCategoria(index) {
-    const nombre = categorias[index];
+    const nombre = categorias[index].name;
     if (!nombre) return;
     const enUso = gastos.some(g => g.categoria === nombre);
     if (enUso) {
@@ -771,6 +974,9 @@ document.addEventListener('keydown', function(e) {
         cerrarModalCategorias();
         cerrarRegistro();
         if (typeof cerrarScanner === 'function') cerrarScanner();
+        if (typeof cerrarModalDeuda === 'function') cerrarModalDeuda();
+        if (typeof cerrarModalEditarIngreso === 'function') cerrarModalEditarIngreso();
+        cerrarBottomSheet();
     }
 });
 
