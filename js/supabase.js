@@ -62,6 +62,30 @@ async function supabaseFetch(path, options = {}) {
     return data;
 }
 
+function processRecoveryHash() {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('type=recovery')) return null;
+    try {
+        const params = new URLSearchParams(hash.replace('#', ''));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        const expires_in = parseInt(params.get('expires_in') || '3600');
+        if (!access_token) return null;
+        const now = Math.floor(Date.now() / 1000);
+        const session = {
+            access_token,
+            refresh_token,
+            expires_in,
+            expires_at: now + expires_in,
+            token_type: params.get('token_type') || 'bearer',
+            user: { id: params.get('user_id') || '', email: params.get('email') || '' }
+        };
+        saveSession(session);
+        window.location.hash = '';
+        return session;
+    } catch (e) { return null; }
+}
+
 supabase.auth = {
     getSession() {
         const session = loadSession();
@@ -126,6 +150,34 @@ supabase.auth = {
         saveSession(null);
         notifyListeners('SIGNED_OUT', null);
         return { error: null };
+    },
+
+    async resetPasswordForEmail(email, options = {}) {
+        try {
+            await supabaseFetch('/auth/v1/recover', {
+                body: { email }
+            });
+            return { error: null, data: {} };
+        } catch (err) {
+            return { data: { user: null, session: null }, error: { message: err.message } };
+        }
+    },
+
+    async updateUser(attributes) {
+        const session = loadSession();
+        if (!session) {
+            return { data: { user: null }, error: { message: 'No hay sesión activa' } };
+        }
+        try {
+            const data = await supabaseFetch('/auth/v1/user', {
+                method: 'PUT',
+                token: session.access_token,
+                body: attributes
+            });
+            return { data: { user: data }, error: null };
+        } catch (err) {
+            return { data: { user: null }, error: { message: err.message } };
+        }
     },
 
     onAuthStateChange(callback) {

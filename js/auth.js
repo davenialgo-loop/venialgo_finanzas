@@ -136,10 +136,10 @@ function domReady() {
 }
 
 function detectarRecovery() {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.replace('#', ''));
-    if (params.get('type') === 'recovery') {
+    const session = processRecoveryHash();
+    if (session) {
         mostrarNewPasswordSection();
+        notifyListeners('PASSWORD_RECOVERY', session);
     }
 }
 
