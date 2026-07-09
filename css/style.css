@@ -855,6 +855,164 @@ tr:hover td {
     font-weight: 600;
 }
 
+/* ----- SCANNER ----- */
+.btn-scan {
+    background: #7B1FA2;
+    color: white;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.btn-scan:hover {
+    background: #6A1B9A;
+    transform: scale(1.03);
+}
+
+.modal-scanner {
+    max-width: 520px;
+}
+
+.scanner-viewfinder {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.8rem;
+}
+
+.scanner-viewfinder video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.scanner-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 60%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    pointer-events: none;
+}
+
+.scanner-corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--success-color);
+    border-style: solid;
+}
+
+.scanner-corner.tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 8px 0 0 0; }
+.scanner-corner.tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-radius: 0 8px 0 0; }
+.scanner-corner.bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-radius: 0 0 0 8px; }
+.scanner-corner.br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 8px 0; }
+
+.scanner-loading {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    pointer-events: none;
+}
+
+.scanner-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #ef9a9a;
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    text-align: center;
+    max-width: 90%;
+}
+
+.scanner-preview {
+    background: var(--bg-card);
+    padding: 0.8rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.scanner-preview .scanner-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.scanner-preview .scanner-form .field {
+    margin-bottom: 0;
+}
+
+.scanner-preview .scanner-form input,
+.scanner-preview .scanner-form select {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.9rem;
+    border: 2px solid var(--input-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    width: 100%;
+}
+
+.scanner-preview .scanner-form input:focus,
+.scanner-preview .scanner-form select:focus {
+    outline: none;
+    border-color: var(--success-color);
+}
+
+.scanner-actions {
+    margin-top: 0.8rem;
+}
+
+.btn-scan-capture {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.btn-scan-capture:hover {
+    background: #e68900;
+    transform: scale(1.03);
+}
+
 /* ----- FOOTER ----- */
 .app-footer {
     text-align: center;
@@ -1020,7 +1178,7 @@ tr:hover td {
         padding: 0.3rem 0.4rem;
     }
 
-    .btn-excel, .btn-categoria, .btn-logout {
+    .btn-excel, .btn-categoria, .btn-scan, .btn-logout {
         font-size: 0.7rem;
         padding: 0.3rem 0.6rem;
     }

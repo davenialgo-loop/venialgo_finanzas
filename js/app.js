@@ -60,7 +60,7 @@ function renderizarTodo() {
 }
 
 function cargarSelectCategorias() {
-    const selects = ['categoria', 'filtroCategoria', 'editCategoria'];
+    const selects = ['categoria', 'filtroCategoria', 'editCategoria', 'scanCategoria'];
     selects.forEach(id => {
         const select = document.getElementById(id);
         if (!select) return;
@@ -770,6 +770,7 @@ document.addEventListener('keydown', function(e) {
         cerrarModal();
         cerrarModalCategorias();
         cerrarRegistro();
+        if (typeof cerrarScanner === 'function') cerrarScanner();
     }
 });
 
