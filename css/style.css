@@ -222,7 +222,7 @@ body {
     background: var(--bg-secondary);
     border-radius: 24px;
     padding: 1.5rem;
-    padding-bottom: 5rem;
+    padding-bottom: 5.5rem;
     box-shadow: var(--shadow);
 }
 
@@ -1389,18 +1389,23 @@ tr:hover td {
 /* ----- BOTTOM NAV ----- */
 .bottom-nav {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    bottom: 0.8rem;
+    left: 0.8rem;
+    width: calc(100% - 1.6rem);
+    max-width: 500px;
     background: var(--bg-secondary);
-    border-top: 1px solid var(--border-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
     display: flex;
     justify-content: space-around;
     align-items: stretch;
     z-index: 9990;
-    padding: 0.3rem 0;
+    padding: 0.3rem 0.2rem;
     padding-bottom: calc(0.3rem + env(safe-area-inset-bottom, 0px));
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+    margin: 0 auto;
+    left: 0;
+    right: 0;
 }
 
 .nav-btn {
@@ -1527,7 +1532,7 @@ tr:hover td {
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
-        padding-bottom: 4.5rem;
+        padding-bottom: 5rem;
         border-radius: 16px;
     }
 
@@ -1628,7 +1633,7 @@ tr:hover td {
 @media (max-width: 400px) {
     .container {
         padding: 0.6rem;
-        padding-bottom: 4rem;
+        padding-bottom: 4.5rem;
     }
 
     h1 {
