@@ -129,18 +129,6 @@
                     <i class="fas fa-user-circle"></i>
                     <span id="usuarioActual">Usuario</span>
                 </div>
-                <button class="btn-categoria" onclick="abrirModalCategorias()">
-                    <i class="fas fa-tags"></i> <span class="hide-mobile">Categorías</span>
-                </button>
-                <button class="btn-scan" onclick="abrirScanner()">
-                    <i class="fas fa-camera"></i> <span class="hide-mobile">Escanear</span>
-                </button>
-                <button class="btn-excel" onclick="exportarExcel()">
-                    <i class="fas fa-file-excel"></i> <span class="hide-mobile">Exportar</span>
-                </button>
-                <button class="btn-logout" onclick="cerrarSesion()">
-                    <i class="fas fa-sign-out-alt"></i> <span class="hide-mobile">Salir</span>
-                </button>
                 <div class="toggle-dark" id="toggleDark" onclick="toggleModoOscuro()">
                     <div class="toggle-ball">
                         <i class="fas fa-sun" id="iconoToggle"></i>
@@ -248,6 +236,26 @@
         </footer>
     </div>
 </div>
+
+<!-- Barra inferior de herramientas -->
+<nav class="bottom-nav">
+    <button class="nav-btn nav-scan" onclick="abrirScanner()" title="Escanear factura">
+        <i class="fas fa-camera"></i>
+        <span>Escanear</span>
+    </button>
+    <button class="nav-btn nav-categorias" onclick="abrirModalCategorias()" title="Gestionar categorías">
+        <i class="fas fa-tags"></i>
+        <span>Categorías</span>
+    </button>
+    <button class="nav-btn nav-exportar" onclick="exportarExcel()" title="Exportar a Excel">
+        <i class="fas fa-file-excel"></i>
+        <span>Exportar</span>
+    </button>
+    <button class="nav-btn nav-salir" onclick="cerrarSesion()" title="Cerrar sesión">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Salir</span>
+    </button>
+</nav>
 
 <!-- ============================================================ -->
 <!-- MODAL DE EDICIÓN -->

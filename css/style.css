@@ -222,6 +222,7 @@ body {
     background: var(--bg-secondary);
     border-radius: 24px;
     padding: 1.5rem;
+    padding-bottom: 4.5rem;
     box-shadow: var(--shadow);
 }
 
@@ -275,66 +276,6 @@ h1 small {
 .user-info i {
     color: var(--success-color);
     font-size: 1.2rem;
-}
-
-.btn-logout {
-    background: var(--danger-color);
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.btn-logout:hover {
-    background: #c62828;
-    transform: scale(1.03);
-}
-
-.btn-excel {
-    background: #217346;
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.85rem;
-}
-
-.btn-excel:hover {
-    background: #1a5c38;
-    transform: scale(1.03);
-}
-
-.btn-categoria {
-    background: var(--warning-color);
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.85rem;
-}
-
-.btn-categoria:hover {
-    background: #e68900;
-    transform: scale(1.03);
 }
 
 /* ----- TOGGLE MODO OSCURO ----- */
@@ -856,26 +797,6 @@ tr:hover td {
 }
 
 /* ----- SCANNER ----- */
-.btn-scan {
-    background: #7B1FA2;
-    color: white;
-    border: none;
-    padding: 0.4rem 1rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.85rem;
-}
-
-.btn-scan:hover {
-    background: #6A1B9A;
-    transform: scale(1.03);
-}
-
 .modal-scanner {
     max-width: 520px;
 }
@@ -1013,6 +934,79 @@ tr:hover td {
     transform: scale(1.03);
 }
 
+/* ----- BOTTOM NAV ----- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    z-index: 9990;
+    padding: 0.3rem 0;
+    padding-bottom: calc(0.3rem + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    background: none;
+    border: none;
+    padding: 0.3rem 0.2rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 500;
+    min-width: 0;
+}
+
+.nav-btn i {
+    font-size: 1.15rem;
+    transition: 0.2s;
+}
+
+.nav-btn span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.nav-btn:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+.nav-scan i { color: #7B1FA2; }
+.nav-scan:hover i { color: #6A1B9A; }
+.nav-scan:hover { background: rgba(123, 31, 162, 0.08); }
+
+.nav-categorias i { color: var(--warning-color); }
+.nav-categorias:hover i { color: #e68900; }
+.nav-categorias:hover { background: rgba(255, 152, 0, 0.08); }
+
+.nav-exportar i { color: #217346; }
+.nav-exportar:hover i { color: #1a5c38; }
+.nav-exportar:hover { background: rgba(33, 115, 70, 0.08); }
+
+.nav-salir i { color: var(--danger-color); }
+.nav-salir:hover i { color: #c62828; }
+.nav-salir:hover { background: rgba(229, 57, 53, 0.08); }
+
 /* ----- FOOTER ----- */
 .app-footer {
     text-align: center;
@@ -1075,7 +1069,22 @@ tr:hover td {
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
+        padding-bottom: 4rem;
         border-radius: 16px;
+    }
+
+    .bottom-nav {
+        padding: 0.2rem 0;
+        padding-bottom: calc(0.2rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .nav-btn {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.1rem;
+    }
+
+    .nav-btn i {
+        font-size: 1rem;
     }
 
     .form-gasto {
@@ -1163,6 +1172,7 @@ tr:hover td {
 @media (max-width: 400px) {
     .container {
         padding: 0.6rem;
+        padding-bottom: 3.8rem;
     }
 
     h1 {
@@ -1178,9 +1188,12 @@ tr:hover td {
         padding: 0.3rem 0.4rem;
     }
 
-    .btn-excel, .btn-categoria, .btn-scan, .btn-logout {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.6rem;
+    .nav-btn {
+        font-size: 0.55rem;
+    }
+
+    .nav-btn i {
+        font-size: 0.9rem;
     }
 
     .login-box {
