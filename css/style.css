@@ -1164,9 +1164,7 @@ tr:hover td {
         padding: 1rem;
     }
 
-    .user-info span {
-        display: none;
-    }
+
 }
 
 @media (max-width: 400px) {
