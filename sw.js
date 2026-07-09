@@ -1,4 +1,4 @@
-const CACHE_NAME = 'venialgo-gastos-v1';
+const CACHE_NAME = 'venialgo-gastos-v2';
 
 const urlsToCache = [
     '.',
@@ -15,7 +15,7 @@ const urlsToCache = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
-    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js'
 ];
 
 self.addEventListener('install', event => {
