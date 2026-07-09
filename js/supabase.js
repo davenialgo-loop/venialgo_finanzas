@@ -154,9 +154,9 @@ supabase.auth = {
 
     async resetPasswordForEmail(email, options = {}) {
         try {
-            await supabaseFetch('/auth/v1/recover', {
-                body: { email }
-            });
+            const body = { email };
+            if (options.redirectTo) body.redirect_to = options.redirectTo;
+            await supabaseFetch('/auth/v1/recover', { body });
             return { error: null, data: {} };
         } catch (err) {
             return { data: { user: null, session: null }, error: { message: err.message } };

@@ -49,5 +49,11 @@
         <p>La página que buscas no existe o fue movida.</p>
         <a href="./">Volver a Venialgo Finanzas</a>
     </div>
+    <script>
+        var hash = window.location.hash;
+        if (hash) {
+            window.location.replace('./' + hash);
+        }
+    </script>
 </body>
 </html>
