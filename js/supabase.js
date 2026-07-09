@@ -165,6 +165,20 @@ supabase.auth = {
         }
     },
 
+    async recover(email) {
+        try {
+            const params = {};
+            params.redirect_to = 'https://davenialgo-loop.github.io/venialgo_finanzas/';
+            const query = new URLSearchParams(params).toString();
+            await supabaseFetch('/auth/v1/recover?' + query, {
+                body: { email }
+            });
+            return { error: null, data: {} };
+        } catch (err) {
+            return { data: { user: null, session: null }, error: { message: err.message } };
+        }
+    },
+
     async updateUser(attributes) {
         const session = loadSession();
         if (!session) {

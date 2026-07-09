@@ -87,9 +87,7 @@ function cerrarResetPassword() {
 }
 
 async function enviarLinkReset(email) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://davenialgo-loop.github.io/venialgo_finanzas/'
-    });
+    const { error } = await supabase.auth.recover(email);
     return error;
 }
 
