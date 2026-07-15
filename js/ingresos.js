@@ -18,7 +18,7 @@ async function cargarIngresos() {
 }
 
 function renderizarIngresos() {
-    cargarSelectCategorias('ingreso');
+    cargarSelectCategoriasIngreso();
     renderizarTablaIngresos();
     actualizarResumenIngresos();
     setTimeout(() => {
@@ -145,10 +145,10 @@ function actualizarGraficoMensualIngresos() {
 
 async function agregarIngreso(e) {
     e.preventDefault();
-    const concepto = document.getElementById('ingresoConcepto').value.trim();
-    const categoria = document.getElementById('ingresoCategoria').value;
-    const monto = parseFloat(document.getElementById('ingresoMonto').value);
-    const fecha = document.getElementById('ingresoFecha')?.value || new Date().toISOString().split('T')[0];
+    const concepto = document.getElementById('conceptoIngreso').value.trim();
+    const categoria = document.getElementById('categoriaIngreso').value;
+    const monto = parseFloat(document.getElementById('montoIngreso').value);
+    const fecha = new Date().toISOString().split('T')[0];
     if (!concepto) { alert('Por favor, ingresa un concepto.'); return; }
     if (isNaN(monto) || monto < 100) { alert('El monto mínimo es ₲ 100.'); return; }
     const { data, error } = await supabase.from('incomes').insert({ user_id: currentUser.id, concepto, categoria, monto: Math.round(monto), fecha }).select();
@@ -156,18 +156,18 @@ async function agregarIngreso(e) {
     if (data && data[0]) ingresos.unshift(data[0]);
     renderizarIngresos();
     document.getElementById('formIngreso').reset();
-    document.getElementById('ingresoConcepto').focus();
+    document.getElementById('conceptoIngreso').focus();
 }
 
 function abrirModalEditarIngreso(id) {
     const ingreso = ingresos.find(g => g.id === id);
     if (!ingreso) return;
-    cargarSelectCategorias('ingreso');
+    cargarSelectCategoriasIngreso();
     document.getElementById('editIngresoId').value = id;
-    document.getElementById('editIngresoConcepto').value = ingreso.concepto;
-    document.getElementById('editIngresoCategoria').value = ingreso.categoria;
-    document.getElementById('editIngresoMonto').value = ingreso.monto;
-    document.getElementById('editIngresoFecha').value = ingreso.fecha;
+    document.getElementById('editConceptoIngreso').value = ingreso.concepto;
+    document.getElementById('editCategoriaIngreso').value = ingreso.categoria;
+    document.getElementById('editMontoIngreso').value = ingreso.monto;
+    document.getElementById('editFechaIngreso').value = ingreso.fecha;
     document.getElementById('modalEditarIngreso').classList.add('active');
 }
 
@@ -178,10 +178,10 @@ function cerrarModalEditarIngreso() {
 async function guardarEdicionIngreso(e) {
     e.preventDefault();
     const id = parseInt(document.getElementById('editIngresoId').value);
-    const concepto = document.getElementById('editIngresoConcepto').value.trim();
-    const categoria = document.getElementById('editIngresoCategoria').value;
-    const monto = parseFloat(document.getElementById('editIngresoMonto').value);
-    const fecha = document.getElementById('editIngresoFecha').value;
+    const concepto = document.getElementById('editConceptoIngreso').value.trim();
+    const categoria = document.getElementById('editCategoriaIngreso').value;
+    const monto = parseFloat(document.getElementById('editMontoIngreso').value);
+    const fecha = document.getElementById('editFechaIngreso').value;
     if (!concepto) { alert('Por favor, ingresa un concepto.'); return; }
     if (isNaN(monto) || monto < 100) { alert('El monto mínimo es ₲ 100.'); return; }
     if (!fecha) { alert('Por favor, selecciona una fecha.'); return; }

@@ -64,6 +64,25 @@ async function cargarDatosIniciales() {
         }
     }
 
+    const hasIncomeCats = categorias.some(c => c.tipo === 'income');
+    if (!hasIncomeCats) {
+        const incomeCats = [
+            { name: 'Salario', tipo: 'income' },
+            { name: 'Freelance', tipo: 'income' },
+            { name: 'Inversiones', tipo: 'income' },
+            { name: 'Regalos', tipo: 'income' },
+            { name: 'Otros', tipo: 'income' }
+        ];
+        for (const cat of incomeCats) {
+            await supabase.from('categories').insert({
+                user_id: currentUser.id,
+                name: cat.name,
+                tipo: cat.tipo
+            });
+        }
+        categorias.push(...incomeCats);
+    }
+
     if (typeof cargarIngresos === 'function') {
         await cargarIngresos();
     }
