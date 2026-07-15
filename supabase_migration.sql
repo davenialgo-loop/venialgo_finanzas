@@ -1,5 +1,6 @@
 -- ============================================================
--- Migration: Add incomes, debts tables + category tipo column
+-- Migration v2: Create incomes and debts tables only
+-- Las operaciones de categories ya se aplicaron en v1
 -- ============================================================
 
 -- 1. Tabla de ingresos
@@ -15,21 +16,20 @@ CREATE TABLE IF NOT EXISTS incomes (
 
 ALTER TABLE incomes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own incomes"
-    ON incomes FOR SELECT
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own incomes"
-    ON incomes FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own incomes"
-    ON incomes FOR UPDATE
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own incomes"
-    ON incomes FOR DELETE
-    USING (auth.uid() = user_id);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'incomes' AND policyname = 'Users can view their own incomes') THEN
+        CREATE POLICY "Users can view their own incomes" ON incomes FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'incomes' AND policyname = 'Users can insert their own incomes') THEN
+        CREATE POLICY "Users can insert their own incomes" ON incomes FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'incomes' AND policyname = 'Users can update their own incomes') THEN
+        CREATE POLICY "Users can update their own incomes" ON incomes FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'incomes' AND policyname = 'Users can delete their own incomes') THEN
+        CREATE POLICY "Users can delete their own incomes" ON incomes FOR DELETE USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_incomes_user_id ON incomes(user_id);
 CREATE INDEX IF NOT EXISTS idx_incomes_fecha ON incomes(fecha DESC);
@@ -51,74 +51,20 @@ CREATE TABLE IF NOT EXISTS debts (
 
 ALTER TABLE debts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their own debts"
-    ON debts FOR SELECT
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own debts"
-    ON debts FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own debts"
-    ON debts FOR UPDATE
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete their own debts"
-    ON debts FOR DELETE
-    USING (auth.uid() = user_id);
-
-CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
-CREATE INDEX IF NOT EXISTS idx_debts_estado ON debts(estado);
-
--- 3. Agregar columna tipo a categories (si no existe)
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'categories' AND column_name = 'tipo'
-    ) THEN
-        ALTER TABLE categories ADD COLUMN tipo TEXT NOT NULL DEFAULT 'expense'
-            CHECK (tipo IN ('expense', 'income'));
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'debts' AND policyname = 'Users can view their own debts') THEN
+        CREATE POLICY "Users can view their own debts" ON debts FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'debts' AND policyname = 'Users can insert their own debts') THEN
+        CREATE POLICY "Users can insert their own debts" ON debts FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'debts' AND policyname = 'Users can update their own debts') THEN
+        CREATE POLICY "Users can update their own debts" ON debts FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'debts' AND policyname = 'Users can delete their own debts') THEN
+        CREATE POLICY "Users can delete their own debts" ON debts FOR DELETE USING (auth.uid() = user_id);
     END IF;
 END $$;
 
--- 4. Insertar categorías de ingreso por defecto para usuarios existentes
-INSERT INTO categories (user_id, name, tipo)
-SELECT DISTINCT c.user_id, 'Salario', 'income'
-FROM categories c
-WHERE NOT EXISTS (
-    SELECT 1 FROM categories c2
-    WHERE c2.user_id = c.user_id AND c2.name = 'Salario' AND c2.tipo = 'income'
-);
-
-INSERT INTO categories (user_id, name, tipo)
-SELECT DISTINCT c.user_id, 'Freelance', 'income'
-FROM categories c
-WHERE NOT EXISTS (
-    SELECT 1 FROM categories c2
-    WHERE c2.user_id = c.user_id AND c2.name = 'Freelance' AND c2.tipo = 'income'
-);
-
-INSERT INTO categories (user_id, name, tipo)
-SELECT DISTINCT c.user_id, 'Inversiones', 'income'
-FROM categories c
-WHERE NOT EXISTS (
-    SELECT 1 FROM categories c2
-    WHERE c2.user_id = c.user_id AND c2.name = 'Inversiones' AND c2.tipo = 'income'
-);
-
-INSERT INTO categories (user_id, name, tipo)
-SELECT DISTINCT c.user_id, 'Regalos', 'income'
-FROM categories c
-WHERE NOT EXISTS (
-    SELECT 1 FROM categories c2
-    WHERE c2.user_id = c.user_id AND c2.name = 'Regalos' AND c2.tipo = 'income'
-);
-
-INSERT INTO categories (user_id, name, tipo)
-SELECT DISTINCT c.user_id, 'Otros', 'income'
-FROM categories c
-WHERE NOT EXISTS (
-    SELECT 1 FROM categories c2
-    WHERE c2.user_id = c.user_id AND c2.name = 'Otros' AND c2.tipo = 'income'
-);
+CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
+CREATE INDEX IF NOT EXISTS idx_debts_estado ON debts(estado);
