@@ -6,6 +6,10 @@ let ordenColumna = 'fecha';
 let ordenDireccion = 'desc';
 
 async function iniciarApp() {
+    showLoading(document.getElementById('listaUltimosMovimientos'));
+    showLoading(document.getElementById('tablaGastos'));
+    showLoading(document.getElementById('listaDeudas'));
+    showLoading(document.getElementById('listaInversiones'));
     await cargarDatosIniciales();
     cargarModoOscuro();
     mostrarSeccion('inicio');
@@ -89,6 +93,9 @@ async function cargarDatosIniciales() {
     if (typeof cargarDeudas === 'function') {
         await cargarDeudas();
     }
+    if (typeof cargarInversiones === 'function') {
+        await cargarInversiones();
+    }
 }
 
 function mostrarSeccion(id) {
@@ -100,7 +107,8 @@ function mostrarSeccion(id) {
         gastos: '#section-gastos',
         categorias: '#section-categorias',
         ingresos: '#section-ingresos',
-        deudas: '#section-deudas'
+        deudas: '#section-deudas',
+        inversiones: '#section-inversiones'
     };
 
     const section = document.querySelector(sectionMap[id]);
@@ -119,6 +127,8 @@ function mostrarSeccion(id) {
         renderizarIngresos();
     } else if (id === 'deudas' && typeof renderizarDeudas === 'function') {
         renderizarDeudas();
+    } else if (id === 'inversiones' && typeof renderizarInversiones === 'function') {
+        renderizarInversiones();
     }
 
     cerrarBottomSheet();
@@ -227,12 +237,12 @@ async function eliminarCategoriaDesdePagina(nombre) {
     if (!cat) return;
     const enUso = gastos.some(g => g.categoria === nombre);
     if (enUso) {
-        alert('No se puede eliminar una categoría que está en uso.');
+        showToast('No se puede eliminar una categoría que está en uso.', 'error');
         return;
     }
-    if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
+    if (!await mostrarConfirmacion(`¿Eliminar la categoría "${nombre}"?`)) return;
     const { error } = await supabase.from('categories').delete().eq('user_id', currentUser.id).eq('name', nombre);
-    if (error) { alert('Error: ' + error.message); return; }
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
     categorias = categorias.filter(c => c.name !== nombre);
     renderizarCategoriasPage();
 }
@@ -371,6 +381,13 @@ function actualizarDashboard() {
         document.getElementById('balanceDeudas').textContent = formatearMonto(deudaPendiente);
     }
 
+    if (typeof inversiones !== 'undefined' && Array.isArray(inversiones)) {
+        const totalInvertido = inversiones
+            .filter(i => i.estado === 'activa')
+            .reduce((a, i) => a + Number(i.monto_invertido), 0);
+        document.getElementById('balanceInversiones').textContent = formatearMonto(totalInvertido);
+    }
+
     renderizarUltimosMovimientos();
 }
 
@@ -390,6 +407,12 @@ function renderizarUltimosMovimientos() {
         });
     }
 
+    if (typeof inversiones !== 'undefined' && Array.isArray(inversiones)) {
+        inversiones.forEach(i => {
+            items.push({ ...i, _tipo: 'inversion', _icono: 'fa-chart-line', concepto: i.nombre, monto: i.monto_invertido, fecha: i.fecha_inicio });
+        });
+    }
+
     items.sort((a, b) => new Date(b.fecha + 'T00:00:00') - new Date(a.fecha + 'T00:00:00'));
 
     const ultimos = items.slice(0, 10);
@@ -399,20 +422,22 @@ function renderizarUltimosMovimientos() {
         return;
     }
 
-    container.innerHTML = ultimos.map(item => `
+    container.innerHTML = ultimos.map(item => {
+        const colorClass = item._tipo === 'inversion' ? 'warning' : item._tipo;
+        return `
         <div class="movimiento-item">
-            <div class="movimiento-icon ${item._tipo}">
+            <div class="movimiento-icon ${colorClass}">
                 <i class="fas ${item._icono}"></i>
             </div>
             <div class="movimiento-info">
                 <div class="movimiento-concepto">${escapeHTML(item.concepto || item.nombre || '')}</div>
                 <div class="movimiento-fecha">${formatearFecha(item.fecha)}</div>
             </div>
-            <div class="movimiento-monto ${item._tipo}">
+            <div class="movimiento-monto ${colorClass}">
                 ${item._tipo === 'ingreso' ? '+' : '-'} ${formatearMonto(item.monto || item.monto_total || 0)}
             </div>
         </div>
-    `).join('');
+    `}).join('');
 }
 
 function actualizarGrafico() {
@@ -585,12 +610,12 @@ async function agregarGasto(e) {
     const monto = parseFloat(document.getElementById('monto').value);
 
     if (!concepto) {
-        alert('Por favor, ingresa un concepto.');
+        showToast('Por favor, ingresa un concepto.', 'warning');
         return;
     }
 
     if (isNaN(monto) || monto < 100) {
-        alert('El monto mínimo es ₲ 100.');
+        showToast('El monto mínimo es ₲ 100.', 'warning');
         return;
     }
 
@@ -603,7 +628,7 @@ async function agregarGasto(e) {
     }).select();
 
     if (error) {
-        alert('Error al guardar el gasto: ' + error.message);
+        showToast('Error al guardar el gasto: ' + error.message, 'error');
         return;
     }
 
@@ -621,11 +646,11 @@ async function agregarGasto(e) {
 }
 
 async function eliminarGasto(id) {
-    if (!confirm('¿Eliminar este gasto?')) return;
+    if (!await mostrarConfirmacion('¿Eliminar este gasto?')) return;
 
     const { error } = await supabase.from('expenses').delete().eq('id', id);
     if (error) {
-        alert('Error al eliminar: ' + error.message);
+        showToast('Error al eliminar: ' + error.message, 'error');
         return;
     }
 
@@ -660,17 +685,17 @@ async function guardarEdicion(e) {
     const fecha = document.getElementById('editFecha').value;
 
     if (!concepto) {
-        alert('Por favor, ingresa un concepto.');
+        showToast('Por favor, ingresa un concepto.', 'warning');
         return;
     }
 
     if (isNaN(monto) || monto < 100) {
-        alert('El monto mínimo es ₲ 100.');
+        showToast('El monto mínimo es ₲ 100.', 'warning');
         return;
     }
 
     if (!fecha) {
-        alert('Por favor, selecciona una fecha.');
+        showToast('Por favor, selecciona una fecha.', 'warning');
         return;
     }
 
@@ -682,7 +707,7 @@ async function guardarEdicion(e) {
     }).eq('id', id);
 
     if (error) {
-        alert('Error al actualizar: ' + error.message);
+        showToast('Error al actualizar: ' + error.message, 'error');
         return;
     }
 
@@ -735,12 +760,12 @@ async function agregarCategoria() {
     const nombre = input.value.trim();
 
     if (!nombre) {
-        alert('Por favor ingresa un nombre para la categoría.');
+        showToast('Por favor ingresa un nombre para la categoría.', 'warning');
         return;
     }
 
     if (categorias.some(c => c.name === nombre)) {
-        alert('Esta categoría ya existe.');
+        showToast('Esta categoría ya existe.', 'warning');
         return;
     }
 
@@ -751,7 +776,7 @@ async function agregarCategoria() {
     });
 
     if (error) {
-        alert('Error al guardar la categoría: ' + error.message);
+        showToast('Error al guardar la categoría: ' + error.message, 'error');
         return;
     }
 
@@ -764,18 +789,18 @@ async function agregarCategoria() {
 async function editarCategoria(index) {
     const nombreActual = categorias[index].name;
     if (!nombreActual) return;
-    const nuevoNombre = prompt('Editar nombre de categoría:', nombreActual);
+    const nuevoNombre = await mostrarPrompt('Editar nombre de categoría:', nombreActual);
 
     if (nuevoNombre === null) return;
     const nombreTrim = nuevoNombre.trim();
 
     if (!nombreTrim) {
-        alert('El nombre no puede estar vacío.');
+        showToast('El nombre no puede estar vacío.', 'warning');
         return;
     }
 
     if (categorias.some(c => c.name === nombreTrim) && nombreTrim !== nombreActual) {
-        alert('Ya existe una categoría con ese nombre.');
+        showToast('Ya existe una categoría con ese nombre.', 'warning');
         return;
     }
 
@@ -786,7 +811,7 @@ async function editarCategoria(index) {
         .eq('name', nombreActual);
 
     if (catError) {
-        alert('Error al actualizar: ' + catError.message);
+        showToast('Error al actualizar: ' + catError.message, 'error');
         return;
     }
 
@@ -815,11 +840,11 @@ async function eliminarCategoria(index) {
     if (!nombre) return;
     const enUso = gastos.some(g => g.categoria === nombre);
     if (enUso) {
-        alert('No se puede eliminar una categoría que está en uso en gastos.');
+        showToast('No se puede eliminar una categoría que está en uso en gastos.', 'error');
         return;
     }
 
-    if (!confirm(`¿Eliminar la categoría "${nombre}"?`)) return;
+    if (!await mostrarConfirmacion(`¿Eliminar la categoría "${nombre}"?`)) return;
 
     const { error } = await supabase
         .from('categories')
@@ -828,7 +853,7 @@ async function eliminarCategoria(index) {
         .eq('name', nombre);
 
     if (error) {
-        alert('Error al eliminar: ' + error.message);
+        showToast('Error al eliminar: ' + error.message, 'error');
         return;
     }
 
@@ -840,7 +865,7 @@ async function eliminarCategoria(index) {
 
 function exportarExcel() {
     if (gastos.length === 0) {
-        alert('No hay gastos para exportar.');
+        showToast('No hay gastos para exportar.', 'info');
         return;
     }
 
@@ -885,9 +910,11 @@ function toggleModoOscuro() {
         localStorage.setItem('tema', 'dark');
     }
 
-    setTimeout(() => {
+    setTimeout(function() {
         actualizarGrafico();
         actualizarGraficoMensual();
+        if (typeof actualizarGraficoInvTipo === 'function') actualizarGraficoInvTipo();
+        if (typeof actualizarGraficoInvMensual === 'function') actualizarGraficoInvMensual();
     }, 150);
 }
 
@@ -912,9 +939,11 @@ let resizeTimeout = null;
 
 function handleResize() {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
+    resizeTimeout = setTimeout(function() {
         actualizarGrafico();
         actualizarGraficoMensual();
+        if (typeof actualizarGraficoInvTipo === 'function') actualizarGraficoInvTipo();
+        if (typeof actualizarGraficoInvMensual === 'function') actualizarGraficoInvMensual();
     }, 250);
 }
 
@@ -994,6 +1023,7 @@ document.addEventListener('keydown', function(e) {
         cerrarRegistro();
         if (typeof cerrarScanner === 'function') cerrarScanner();
         if (typeof cerrarModalDeuda === 'function') cerrarModalDeuda();
+        if (typeof cerrarModalEditarInversion === 'function') cerrarModalEditarInversion();
         if (typeof cerrarModalEditarIngreso === 'function') cerrarModalEditarIngreso();
         cerrarBottomSheet();
     }
@@ -1007,6 +1037,9 @@ document.getElementById('modalCategorias')?.addEventListener('click', function(e
 });
 document.getElementById('modalRegistro')?.addEventListener('click', function(e) {
     if (e.target === this) cerrarRegistro();
+});
+document.getElementById('modalEditarInversion')?.addEventListener('click', function(e) {
+    if (e.target === this) cerrarModalEditarInversion();
 });
 
 window.addEventListener('resize', handleResize);

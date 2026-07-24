@@ -232,9 +232,9 @@ function confirmarGastoScan() {
     const fecha = document.getElementById('scanFecha').value;
     const categoria = document.getElementById('scanCategoria').value;
 
-    if (!concepto) { alert('Por favor, ingresá un concepto.'); return; }
-    if (isNaN(monto) || monto < 100) { alert('El monto mínimo es ₲ 100.'); return; }
-    if (!fecha) { alert('Por favor, seleccioná una fecha.'); return; }
+    if (!concepto) { showToast('Por favor, ingresá un concepto.', 'warning'); return; }
+    if (isNaN(monto) || monto < 100) { showToast('El monto mínimo es ₲ 100.', 'warning'); return; }
+    if (!fecha) { showToast('Por favor, seleccioná una fecha.', 'warning'); return; }
 
     agregarGastoScan({ concepto, categoria, monto: Math.round(monto), fecha });
 }
@@ -249,7 +249,7 @@ async function agregarGastoScan(gasto) {
     }).select();
 
     if (error) {
-        alert('Error al guardar el gasto: ' + error.message);
+        showToast('Error al guardar el gasto: ' + error.message, 'error');
         return;
     }
 

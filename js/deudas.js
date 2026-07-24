@@ -122,15 +122,15 @@ async function crearDeuda(e) {
     const fechaVenc = document.getElementById('deudaFechaVenc').value || null;
     const notas = document.getElementById('deudaNotas').value.trim();
 
-    if (!nombre) { alert('Por favor, ingresa un nombre.'); return; }
-    if (isNaN(montoTotal) || montoTotal <= 0) { alert('El monto total debe ser mayor a 0.'); return; }
+    if (!nombre) { showToast('Por favor, ingresa un nombre.', 'warning'); return; }
+    if (isNaN(montoTotal) || montoTotal <= 0) { showToast('El monto total debe ser mayor a 0.', 'warning'); return; }
 
     const { data, error } = await supabase.from('debts').insert({
         user_id: currentUser.id, nombre, tipo, monto_total: Math.round(montoTotal),
         monto_pagado: Math.round(montoPagado), fecha_vencimiento: fechaVenc, notas
     }).select();
 
-    if (error) { alert('Error al guardar: ' + error.message); return; }
+    if (error) { showToast('Error al guardar: ' + error.message, 'error'); return; }
     if (data && data[0]) deudas.unshift(data[0]);
     renderizarDeudas();
     cerrarModalDeuda();
@@ -157,8 +157,8 @@ async function guardarEdicionDeuda(e, id) {
     const fechaVenc = document.getElementById('deudaFechaVenc').value || null;
     const notas = document.getElementById('deudaNotas').value.trim();
 
-    if (!nombre) { alert('Por favor, ingresa un nombre.'); return; }
-    if (isNaN(montoTotal) || montoTotal <= 0) { alert('El monto total debe ser mayor a 0.'); return; }
+    if (!nombre) { showToast('Por favor, ingresa un nombre.', 'warning'); return; }
+    if (isNaN(montoTotal) || montoTotal <= 0) { showToast('El monto total debe ser mayor a 0.', 'warning'); return; }
 
     const estado = montoPagado >= montoTotal ? 'pagada' : 'activa';
     const { error } = await supabase.from('debts').update({
@@ -166,7 +166,7 @@ async function guardarEdicionDeuda(e, id) {
         monto_pagado: Math.round(montoPagado), fecha_vencimiento: fechaVenc, notas, estado
     }).eq('id', id);
 
-    if (error) { alert('Error al actualizar: ' + error.message); return; }
+    if (error) { showToast('Error al actualizar: ' + error.message, 'error'); return; }
     const index = deudas.findIndex(d => d.id === id);
     if (index !== -1) deudas[index] = { ...deudas[index], nombre, tipo, monto_total: Math.round(montoTotal), monto_pagado: Math.round(montoPagado), fecha_vencimiento: fechaVenc, notas, estado };
     renderizarDeudas();
@@ -174,26 +174,26 @@ async function guardarEdicionDeuda(e, id) {
 }
 
 async function eliminarDeuda(id) {
-    if (!confirm('¿Eliminar esta deuda?')) return;
+    if (!await mostrarConfirmacion('¿Eliminar esta deuda?')) return;
     const { error } = await supabase.from('debts').delete().eq('id', id);
-    if (error) { alert('Error al eliminar: ' + error.message); return; }
+    if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
     deudas = deudas.filter(d => d.id !== id);
     renderizarDeudas();
 }
 
-function abrirPagoDeuda(id) {
+async function abrirPagoDeuda(id) {
     const d = deudas.find(de => de.id === id);
     if (!d) return;
     const saldo = Number(d.monto_total) - Number(d.monto_pagado);
-    const montoStr = prompt(`Monto a ${d.tipo === 'a_pagar' ? 'pagar' : 'recibir'} (saldo pendiente: ${formatearMonto(saldo)}):`, String(saldo));
+    const montoStr = await mostrarPrompt(`Monto a ${d.tipo === 'a_pagar' ? 'pagar' : 'recibir'} (saldo pendiente: ${formatearMonto(saldo)}):`, String(saldo));
     if (montoStr === null) return;
     const monto = parseFloat(montoStr.replace(/[^\d.,]/g, '').replace(',', '.'));
-    if (isNaN(monto) || monto <= 0) { alert('Monto inválido.'); return; }
+    if (isNaN(monto) || monto <= 0) { showToast('Monto inválido.', 'warning'); return; }
     const nuevoPagado = Math.min(Number(d.monto_pagado) + Math.round(monto), Number(d.monto_total));
     const nuevoEstado = nuevoPagado >= Number(d.monto_total) ? 'pagada' : 'activa';
 
     supabase.from('debts').update({ monto_pagado: nuevoPagado, estado: nuevoEstado }).eq('id', id).then(({ error }) => {
-        if (error) { alert('Error: ' + error.message); return; }
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
         const index = deudas.findIndex(de => de.id === id);
         if (index !== -1) deudas[index] = { ...deudas[index], monto_pagado: nuevoPagado, estado: nuevoEstado };
         renderizarDeudas();

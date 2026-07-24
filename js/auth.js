@@ -249,6 +249,6 @@ document.getElementById('formNewPassword')?.addEventListener('submit', async fun
         document.getElementById('appContainer').classList.remove('active');
         document.getElementById('loginForm').reset();
         ocultarErrorLogin();
-        alert('Contraseña actualizada correctamente. Ahora podés iniciar sesión con tu nueva contraseña.');
+        showToast('Contraseña actualizada correctamente. Ahora podés iniciar sesión con tu nueva contraseña.', 'success');
     }
 });

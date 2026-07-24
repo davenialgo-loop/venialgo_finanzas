@@ -30,7 +30,7 @@ function renderizarIngresos() {
 function renderizarTablaIngresos() {
     const tbody = document.getElementById('tablaIngresos');
     if (!tbody) return;
-    const textoBusqueda = (document.getElementById('busquedaIngresos')?.value || '').toLowerCase().trim();
+    const textoBusqueda = (document.getElementById('buscarIngreso')?.value || '').toLowerCase().trim();
     let filtrados = ingresos;
     if (textoBusqueda) {
         filtrados = filtrados.filter(g =>
@@ -43,10 +43,10 @@ function renderizarTablaIngresos() {
     } else {
         tbody.innerHTML = filtrados.map(g => `
             <tr>
+                <td>${formatearFecha(g.fecha)}</td>
                 <td><strong>${escapeHTML(g.concepto)}</strong></td>
                 <td><span class="categoria-badge">${escapeHTML(g.categoria)}</span></td>
-                <td class="total-gastos" style="color:var(--success-color)">${formatearMonto(g.monto)}</td>
-                <td>${formatearFecha(g.fecha)}</td>
+                <td class="total-gastos" style="color:var(--success-color);text-align:right">${formatearMonto(g.monto)}</td>
                 <td style="text-align:center">
                     <div class="acciones-btns">
                         <button class="btn-accion btn-editar" onclick="abrirModalEditarIngreso(${g.id})" title="Editar">
@@ -64,27 +64,31 @@ function renderizarTablaIngresos() {
 
 function actualizarResumenIngresos() {
     const elTotal = document.getElementById('totalIngresos');
-    const elMonto = document.getElementById('totalMontoIngresos');
-    const elMayor = document.getElementById('categoriaMayorIngresos');
+    const elMes = document.getElementById('totalIngresosMes');
+    const elPromedio = document.getElementById('promedioIngresos');
     if (!elTotal) return;
-    elTotal.textContent = ingresos.length;
-    const totalMonto = ingresos.reduce((acc, g) => acc + Number(g.monto), 0);
-    elMonto.textContent = formatearMonto(totalMonto);
-    if (ingresos.length === 0) {
-        if (elMayor) elMayor.textContent = '-';
-        return;
+    elTotal.textContent = formatearMonto(ingresos.reduce((acc, g) => acc + Number(g.monto), 0));
+
+    const ahora = new Date();
+    const ingresosMes = ingresos.filter(g => {
+        const d = new Date(g.fecha + 'T00:00:00');
+        return d.getMonth() === ahora.getMonth() && d.getFullYear() === ahora.getFullYear();
+    });
+    const totalMes = ingresosMes.reduce((acc, g) => acc + Number(g.monto), 0);
+    if (elMes) elMes.textContent = formatearMonto(totalMes);
+
+    if (elPromedio) {
+        const mesesUnicos = new Set(ingresos.map(g => {
+            const d = new Date(g.fecha + 'T00:00:00');
+            return `${d.getFullYear()}-${d.getMonth()}`;
+        }));
+        const promedio = mesesUnicos.size > 0 ? Math.round(ingresos.reduce((acc, g) => acc + Number(g.monto), 0) / mesesUnicos.size) : 0;
+        elPromedio.textContent = formatearMonto(promedio);
     }
-    const categoriasMap = {};
-    ingresos.forEach(g => { categoriasMap[g.categoria] = (categoriasMap[g.categoria] || 0) + Number(g.monto); });
-    let mayor = '', maxMonto = 0;
-    for (const [cat, monto] of Object.entries(categoriasMap)) {
-        if (monto > maxMonto) { maxMonto = monto; mayor = cat; }
-    }
-    if (elMayor) elMayor.textContent = `${mayor} (${formatearMonto(maxMonto)})`;
 }
 
 function actualizarGraficoIngresos() {
-    const canvas = document.getElementById('graficoIngresos');
+    const canvas = document.getElementById('chartIngresos');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const categoriasMap = {};
@@ -110,7 +114,7 @@ function actualizarGraficoIngresos() {
 }
 
 function actualizarGraficoMensualIngresos() {
-    const canvas = document.getElementById('graficoMensualIngresos');
+    const canvas = document.getElementById('chartIngresosMensual');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const meses = {};
@@ -149,10 +153,10 @@ async function agregarIngreso(e) {
     const categoria = document.getElementById('categoriaIngreso').value;
     const monto = parseFloat(document.getElementById('montoIngreso').value);
     const fecha = new Date().toISOString().split('T')[0];
-    if (!concepto) { alert('Por favor, ingresa un concepto.'); return; }
-    if (isNaN(monto) || monto < 100) { alert('El monto mínimo es ₲ 100.'); return; }
+    if (!concepto) { showToast('Por favor, ingresa un concepto.', 'warning'); return; }
+    if (isNaN(monto) || monto < 100) { showToast('El monto mínimo es ₲ 100.', 'warning'); return; }
     const { data, error } = await supabase.from('incomes').insert({ user_id: currentUser.id, concepto, categoria, monto: Math.round(monto), fecha }).select();
-    if (error) { alert('Error al guardar el ingreso: ' + error.message); return; }
+    if (error) { showToast('Error al guardar el ingreso: ' + error.message, 'error'); return; }
     if (data && data[0]) ingresos.unshift(data[0]);
     renderizarIngresos();
     document.getElementById('formIngreso').reset();
@@ -182,11 +186,11 @@ async function guardarEdicionIngreso(e) {
     const categoria = document.getElementById('editCategoriaIngreso').value;
     const monto = parseFloat(document.getElementById('editMontoIngreso').value);
     const fecha = document.getElementById('editFechaIngreso').value;
-    if (!concepto) { alert('Por favor, ingresa un concepto.'); return; }
-    if (isNaN(monto) || monto < 100) { alert('El monto mínimo es ₲ 100.'); return; }
-    if (!fecha) { alert('Por favor, selecciona una fecha.'); return; }
+    if (!concepto) { showToast('Por favor, ingresa un concepto.', 'warning'); return; }
+    if (isNaN(monto) || monto < 100) { showToast('El monto mínimo es ₲ 100.', 'warning'); return; }
+    if (!fecha) { showToast('Por favor, selecciona una fecha.', 'warning'); return; }
     const { error } = await supabase.from('incomes').update({ concepto, categoria, monto: Math.round(monto), fecha }).eq('id', id);
-    if (error) { alert('Error al actualizar: ' + error.message); return; }
+    if (error) { showToast('Error al actualizar: ' + error.message, 'error'); return; }
     const index = ingresos.findIndex(g => g.id === id);
     if (index !== -1) ingresos[index] = { ...ingresos[index], concepto, categoria, monto: Math.round(monto), fecha };
     renderizarIngresos();
@@ -194,16 +198,16 @@ async function guardarEdicionIngreso(e) {
 }
 
 async function eliminarIngreso(id) {
-    if (!confirm('¿Eliminar este ingreso?')) return;
+    if (!await mostrarConfirmacion('¿Eliminar este ingreso?')) return;
     const { error } = await supabase.from('incomes').delete().eq('id', id);
-    if (error) { alert('Error al eliminar: ' + error.message); return; }
+    if (error) { showToast('Error al eliminar: ' + error.message, 'error'); return; }
     ingresos = ingresos.filter(g => g.id !== id);
     renderizarIngresos();
 }
 
 document.getElementById('formIngreso')?.addEventListener('submit', agregarIngreso);
 document.getElementById('formEditarIngreso')?.addEventListener('submit', guardarEdicionIngreso);
-document.getElementById('busquedaIngresos')?.addEventListener('input', renderizarTablaIngresos);
+document.getElementById('buscarIngreso')?.addEventListener('input', renderizarTablaIngresos);
 document.getElementById('modalEditarIngreso')?.addEventListener('click', function(e) {
     if (e.target === this) cerrarModalEditarIngreso();
 });
