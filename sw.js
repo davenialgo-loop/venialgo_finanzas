@@ -1,4 +1,4 @@
-const CACHE_NAME = 'venialgo-finanzas-v5';
+const CACHE_NAME = 'venialgo-finanzas-v7';
 
 const urlsToCache = [
     '.',
@@ -48,26 +48,44 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const { request } = event;
 
+    if (request.method !== 'GET') return;
+
     if (request.url.includes('supabase.co')) {
         event.respondWith(fetch(request));
         return;
     }
 
-    event.respondWith(
-        caches.match(request).then(cachedResponse => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            return fetch(request).then(response => {
-                if (!response || response.status !== 200 || response.type !== 'basic') {
+    // Navegaciones: red primero (siempre HTML fresco), caché como respaldo offline.
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then(response => {
+                    if (response && response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+                    }
                     return response;
-                }
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(request, responseToCache);
-                });
-                return response;
-            });
+                })
+                .catch(() =>
+                    caches.match(request).then(cached => cached || caches.match('.'))
+                )
+        );
+        return;
+    }
+
+    // Resto: stale-while-revalidate (responde con caché y actualiza en segundo plano).
+    event.respondWith(
+        caches.open(CACHE_NAME).then(async cache => {
+            const cached = await cache.match(request);
+            const network = fetch(request)
+                .then(response => {
+                    if (response && response.status === 200 && (response.type === 'basic' || response.type === 'cors')) {
+                        cache.put(request, response.clone());
+                    }
+                    return response;
+                })
+                .catch(() => cached);
+            return cached || network;
         })
     );
 });

@@ -52,10 +52,16 @@
     transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s, transform 0.2s;
 }
 
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--bg-primary);
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
     color: var(--text-primary);
     display: flex;
     justify-content: center;
@@ -211,6 +217,12 @@ body {
     width: 100%;
     max-width: 1400px;
     margin: 0 auto;
+    height: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     display: none;
 }
 
@@ -429,6 +441,7 @@ h1 small {
     justify-content: space-between;
     align-items: center;
     color: var(--resumen-text);
+    min-width: 0;
 }
 
 .resumen-card i {
@@ -450,6 +463,7 @@ h1 small {
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--text-primary);
+    overflow-wrap: anywhere;
 }
 
 .categoria-mayor {
@@ -937,6 +951,7 @@ tr:hover td {
 /* ----- SECTIONS ----- */
 .sections-wrapper {
     position: relative;
+    min-width: 0;
 }
 
 .section {
@@ -964,10 +979,12 @@ tr:hover td {
 
 .dashboard-inicio .resumen-card {
     padding: 0.8rem;
+    min-width: 0;
 }
 
 .dashboard-inicio .resumen-card .value {
     font-size: 1.1rem;
+    overflow-wrap: anywhere;
 }
 
 .dashboard-inicio .resumen-card i {
@@ -991,9 +1008,19 @@ tr:hover td {
 }
 
 .inicio-actions {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 0.5rem;
     margin-bottom: 1.2rem;
+}
+
+.inicio-actions .btn-agregar,
+.inicio-actions .btn-scan-capture {
+    justify-content: center;
+    min-width: 0;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    white-space: normal;
 }
 
 .ultimos-movimientos {
@@ -1037,6 +1064,7 @@ tr:hover td {
 
 .movimiento-info {
     flex: 1;
+    min-width: 0;
     margin-left: 0.6rem;
 }
 

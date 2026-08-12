@@ -68,3 +68,43 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS idx_debts_user_id ON debts(user_id);
 CREATE INDEX IF NOT EXISTS idx_debts_estado ON debts(estado);
+
+-- ============================================================
+-- Migration v3: Create investments table
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS investments (
+    id BIGSERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    nombre TEXT NOT NULL,
+    tipo_inversion TEXT NOT NULL,
+    monto_invertido NUMERIC NOT NULL CHECK (monto_invertido > 0),
+    rendimiento_estimado NUMERIC DEFAULT 0,
+    rendimiento_real NUMERIC DEFAULT 0,
+    fecha_inicio DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_vencimiento DATE,
+    fecha_cobro DATE,
+    estado TEXT NOT NULL DEFAULT 'activa' CHECK (estado IN ('activa', 'cobrada', 'cancelada')),
+    notas TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'investments' AND policyname = 'Users can view their own investments') THEN
+        CREATE POLICY "Users can view their own investments" ON investments FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'investments' AND policyname = 'Users can insert their own investments') THEN
+        CREATE POLICY "Users can insert their own investments" ON investments FOR INSERT WITH CHECK (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'investments' AND policyname = 'Users can update their own investments') THEN
+        CREATE POLICY "Users can update their own investments" ON investments FOR UPDATE USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'investments' AND policyname = 'Users can delete their own investments') THEN
+        CREATE POLICY "Users can delete their own investments" ON investments FOR DELETE USING (auth.uid() = user_id);
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
+CREATE INDEX IF NOT EXISTS idx_investments_estado ON investments(estado);
